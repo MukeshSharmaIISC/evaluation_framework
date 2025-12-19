@@ -283,3 +283,228 @@ Then we’ll:
 
 
 
+SECOND ---- STEP
+
+
+This is a **very good and very serious question** — and the fact that you’re asking it now means you’re thinking at the *right level* 👍
+Let me answer it **precisely, honestly, and rigorously**, not dogmatically.
+
+---
+
+## Short Answer (Clear)
+
+> **Docker is not theoretically required**,
+> **but it is practically required if you want your framework to be *equally qualified* as the TeamCity setup.**
+
+Now I’ll justify this carefully.
+
+---
+
+# 1️⃣ Why TeamCity Uses Docker (Not by Accident)
+
+TeamCity is not using Docker “because it’s cool”.
+It is using Docker to enforce **four guarantees**.
+
+---
+
+## Guarantee 1 — Environment Reproducibility
+
+Each SWE-Bench task may require:
+
+* Different Python versions
+* Different system libraries
+* Different test runners
+
+Docker guarantees:
+
+* Same OS
+* Same dependencies
+* Same behavior
+
+Without Docker:
+
+* Your local machine state **leaks into evaluation**
+
+🚨 That breaks equivalence.
+
+---
+
+## Guarantee 2 — Isolation Between Tasks
+
+Each task must start from:
+
+* Clean repo
+* Clean environment
+* No residual state
+
+Docker ensures:
+
+* No shared filesystem
+* No cached imports
+* No leftover virtualenvs
+
+Without Docker:
+
+* Subtle contamination bugs occur
+* Pass/fail becomes unreliable
+
+---
+
+## Guarantee 3 — Failure Containment
+
+Some tasks:
+
+* Install bad deps
+* Modify environment variables
+* Break Python environments
+
+Docker:
+
+* Contains damage
+* Allows safe continuation
+
+Without Docker:
+
+* One bad task can break all future tasks
+
+---
+
+## Guarantee 4 — Observational Equivalence
+
+This is the most important.
+
+TeamCity’s **observable behavior** includes:
+
+* OS-level behavior
+* Dependency resolution
+* Test execution environment
+
+If we remove Docker:
+
+> Even if logic is correct, results are **no longer comparable**.
+
+---
+
+# 2️⃣ Can We Technically Run Without Docker?
+
+Yes — **for learning or prototyping**.
+
+You could:
+
+* Use `venv`
+* Clean repos manually
+* Pray dependencies don’t conflict
+
+But this would be:
+
+❌ Not equivalent
+❌ Not robust
+❌ Not publishable
+❌ Not benchmark-grade
+
+---
+
+# 3️⃣ Scientific Standard (This Matters)
+
+If tomorrow you say:
+
+> “My agent scores X% on SWE-Bench Lite”
+
+People will ask:
+
+* What environment?
+* What OS?
+* What dependencies?
+
+If you say:
+
+> “I ran it locally without isolation”
+
+That result is **not acceptable** in serious evaluation.
+
+---
+
+# 4️⃣ The Only Legitimate Alternative to Docker
+
+If you truly cannot use Docker, the **only acceptable substitutes** are:
+
+### Option A — Nix
+
+* Fully declarative environments
+* Harder than Docker
+
+### Option B — Full VM per task
+
+* Very heavy
+* Overkill
+
+### Option C — Conda + strict sandboxing
+
+* Fragile
+* Still weaker than Docker
+
+👉 None are simpler or better than Docker.
+
+---
+
+# 5️⃣ Our Commitment (Based on Your Earlier Constraint)
+
+You explicitly said:
+
+> “Framework must be equally qualified as TeamCity”
+
+Given that requirement:
+
+🔒 **Docker is mandatory**
+
+Not for convenience — for **correctness**.
+
+---
+
+# 6️⃣ Practical Reassurance
+
+We will:
+
+* Use **one Docker image**
+* Keep it minimal
+* Control everything from Python
+* Make it copy-paste simple
+
+You won’t need Docker expertise beyond:
+
+```bash
+docker build
+docker run
+```
+
+---
+
+# 7️⃣ Final Decision Table
+
+| Scenario             | Docker Required? |
+| -------------------- | ---------------- |
+| Learning prototype   | ❌ No             |
+| Quick demo           | ❌ No             |
+| Research evaluation  | ✅ Yes            |
+| TeamCity equivalence | ✅ Yes            |
+| Benchmark claims     | ✅ Yes            |
+
+---
+
+## ✅ Final Answer
+
+> **Yes, Docker is required if (and only if) we want equivalence with TeamCity and SWE-Bench evaluation standards.**
+
+---
+
+### Next Step (Once You’re Comfortable)
+
+When you’re ready, I’ll:
+
+* Introduce Docker **only where absolutely needed**
+* Explain **every Dockerfile line**
+* Show how Python controls Docker (no magic)
+
+Just reply:
+
+**PROCEED WITH DOCKER (PHASE 3)**
