@@ -285,6 +285,225 @@ Then we’ll:
 
 SECOND ---- STEP
 
+Perfect 👍
+We now **enter PHASE 2** and start doing *real work*, still **100% TeamCity-equivalent**.
+
+Take this slowly and copy-paste exactly.
+
+---
+
+# 🧩 PHASE 2 — Task Extraction & Normalization
+
+*(Reproducing TeamCity exactly)*
+
+## What TeamCity does in this phase
+
+In the TeamCity pipeline, after the dataset is ready, it:
+
+1. Reads SWE-Bench Lite JSON
+2. Extracts **per-task metadata**
+3. Writes **`task.json` files**
+4. Uses those files as the **single source of truth** for agents
+
+We will do **the same**, just manually in Python.
+
+---
+
+## STEP 1️⃣ Create a Tasks Output Directory
+
+In VS Code Explorer, create:
+
+```
+eval_framework/tasks_data/
+```
+
+This is where `task.json` files will be generated
+(TeamCity stores them as artifacts; we store them locally).
+
+---
+
+## STEP 2️⃣ Run Task Extraction (No Code Changes)
+
+Open VS Code terminal at `eval_framework/` and run:
+
+```bash
+python dataset/extract_task_data.py \
+  --dataset-path datasets/SWE-bench_Lite \
+  --output tasks_data
+```
+
+### What just happened
+
+* You executed **the same script TeamCity uses**
+* It read the SWE-Bench Lite dataset
+* It generated **one folder per task**
+* Each folder contains a **`task.json`**
+
+📌 This step is **identical** to TeamCity.
+
+---
+
+## STEP 3️⃣ Inspect One Task (Mandatory)
+
+Open any generated folder, for example:
+
+```
+tasks_data/django__django-11099/task.json
+```
+
+You should see something like:
+
+```json
+{
+  "instance_id": "django__django-11099",
+  "repo": "django/django",
+  "base_commit": "abc123...",
+  "problem_statement": "...",
+  "test_command": "pytest tests/..."
+}
+```
+
+### 🔒 IMPORTANT
+
+* Do **not** edit this file
+* This file is what Gemini CLI will consume later
+* This is the **contract**
+
+If this file matches what you see in the TeamCity pipeline → we are correct.
+
+---
+
+## STEP 4️⃣ Add a Small Python Loader (Safe & Required)
+
+Now we add **reading**, not modifying.
+
+📄 **File:** `tasks/load_tasks.py`
+(Create this new file)
+
+Copy-paste:
+
+```python
+import json
+from pathlib import Path
+from tasks.task_schema import Task
+
+
+TASKS_DIR = Path("tasks_data")
+
+
+def load_all_tasks():
+    tasks = []
+
+    for task_dir in TASKS_DIR.iterdir():
+        task_file = task_dir / "task.json"
+        if not task_file.exists():
+            continue
+
+        with open(task_file) as f:
+            data = json.load(f)
+
+        task = Task(
+            instance_id=data["instance_id"],
+            repo=data["repo"],
+            base_commit=data["base_commit"],
+            problem_statement=data["problem_statement"],
+            test_command=data["test_command"],
+        )
+        tasks.append(task)
+
+    return tasks
+```
+
+This does **not change semantics**.
+It simply loads what TeamCity already created.
+
+---
+
+## STEP 5️⃣ Wire This into `runner.py`
+
+Open `runner.py` and replace content with:
+
+```python
+from dataset.prepare_dataset import prepare_dataset, validate_dataset
+from tasks.load_tasks import load_all_tasks
+
+
+def main():
+    print("[PHASE 1] Preparing dataset...")
+    prepare_dataset()
+    validate_dataset()
+
+    print("[PHASE 2] Loading tasks...")
+    tasks = load_all_tasks()
+    print(f"[INFO] Loaded {len(tasks)} tasks.")
+
+    print("[INFO] Framework initialized up to Phase 2.")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+---
+
+## STEP 6️⃣ Run the Pipeline So Far
+
+In VS Code terminal:
+
+```bash
+python runner.py
+```
+
+### Expected output:
+
+* Dataset prepared or skipped
+* Tasks loaded (≈300 for SWE-Bench Lite)
+* No errors
+
+---
+
+# ✅ What We Have Now (Critical Milestone)
+
+You have now **fully reproduced**:
+
+✔ SWE-Bench Lite preparation
+✔ Task extraction
+✔ Task normalization
+✔ Agent input contract
+
+Up to this point, **TeamCity and your framework are functionally identical**.
+
+---
+
+# 🧠 Why This Phase Matters (MTech Insight)
+
+* `task.json` is the **ground truth**
+* Every agent (Gemini, Junie, yours) is judged only by:
+
+  * How it reacts to this file
+* If we get this wrong, **everything downstream is invalid**
+
+You’ve done it correctly.
+
+---
+
+## 🔒 CHECKPOINT 2
+
+Before we touch Docker or repos, confirm:
+
+> You can see `tasks_data/*/task.json` files
+> `runner.py` prints the number of tasks
+> No files were modified manually
+
+Reply with:
+
+**CHECKPOINT 2 CONFIRMED**
+
+Next, we move to **PHASE 3 — Docker-based repo checkout & isolation**, which is the hardest and most important phase.
+
+
+**PHASE 3
+
 
 This is a **very good and very serious question** — and the fact that you’re asking it now means you’re thinking at the *right level* 👍
 Let me answer it **precisely, honestly, and rigorously**, not dogmatically.
