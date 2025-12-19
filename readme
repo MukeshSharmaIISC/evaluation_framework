@@ -1,0 +1,285 @@
+Perfect — this is a **very practical and important question** 👍
+I’ll now switch from *architecture* to **“how do I actually start in VS Code”**, while **keeping the phase-wise plan intact**.
+
+I’ll do this in a **copy-paste friendly, beginner-proof, but still research-grade** way.
+
+---
+
+# 🧑‍💻 How to Begin in VS Code (Step-by-Step)
+
+We will **only set up Phase 0 + Phase 1 skeleton**.
+No logic yet beyond what is required.
+
+---
+
+## STEP 1️⃣ Create the Project Folder
+
+Open VS Code → Open Folder → create and open:
+
+```
+eval_framework
+```
+
+This is your **root directory**.
+
+---
+
+## STEP 2️⃣ Create the Final Project Structure (Folders Only)
+
+In VS Code Explorer, create **exactly this**:
+
+```
+eval_framework/
+│
+├── config.yaml
+├── env.lock.json
+├── runner.py
+│
+├── dataset/
+│   ├── download_dataset.py
+│   ├── extract_task_data.py
+│   └── prepare_dataset.py
+│
+├── tasks/
+│   └── task_schema.py
+│
+├── docker/
+│   └── swebench.Dockerfile
+│
+├── agents/
+│   ├── base.py
+│   └── gemini_cli.py
+│
+├── repo/
+│   └── checkout.py
+│
+├── patch/
+│   └── normalize.py
+│
+├── evaluation/
+│   ├── apply_patch.py
+│   ├── run_tests.py
+│   └── judge.py
+│
+├── metrics/
+│   └── aggregator.py
+│
+└── logs/
+```
+
+⚠️ Create folders first, then empty files.
+
+---
+
+## STEP 3️⃣ Copy Files from TeamCity Repo (IMPORTANT)
+
+Now open the **JetBrains TeamCity repo** side-by-side in VS Code.
+
+### Copy these files **verbatim** (no edits):
+
+### 📌 File 1
+
+From:
+
+```
+teamcity-ai-agent-testing-demo/scripts/download_dataset.py
+```
+
+To:
+
+```
+eval_framework/dataset/download_dataset.py
+```
+
+### 📌 File 2
+
+From:
+
+```
+teamcity-ai-agent-testing-demo/scripts/extract_task_data.py
+```
+
+To:
+
+```
+eval_framework/dataset/extract_task_data.py
+```
+
+👉 **Do not modify even one line**.
+
+This ensures **semantic parity**.
+
+---
+
+## STEP 4️⃣ Create `prepare_dataset.py`
+
+📄 **File:** `dataset/prepare_dataset.py`
+
+Copy-paste this:
+
+```python
+import subprocess
+import pathlib
+
+
+DATASET_DIR = pathlib.Path("datasets/SWE-bench_Lite")
+
+
+def prepare_dataset():
+    """
+    TeamCity equivalent:
+    - download_dataset.py
+    - artifact caching
+    """
+    if DATASET_DIR.exists():
+        print("[INFO] SWE-Bench Lite already present. Skipping download.")
+        return
+
+    print("[INFO] Preparing SWE-Bench Lite dataset...")
+    subprocess.run(
+        ["python", "dataset/download_dataset.py"],
+        check=True
+    )
+
+
+def validate_dataset():
+    required_files = ["test.json", "train.json"]
+    for f in required_files:
+        path = DATASET_DIR / f
+        if not path.exists():
+            raise RuntimeError(f"Missing dataset file: {path}")
+
+
+if __name__ == "__main__":
+    prepare_dataset()
+    validate_dataset()
+```
+
+This is your **Python replacement for the TeamCity dataset build**.
+
+---
+
+## STEP 5️⃣ Create Task Schema
+
+📄 **File:** `tasks/task_schema.py`
+
+Copy-paste:
+
+```python
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class Task:
+    """
+    Exact semantic equivalent of TeamCity task.json
+    """
+    instance_id: str
+    repo: str
+    base_commit: str
+    problem_statement: str
+    test_command: str
+```
+
+Do **not add fields**.
+
+---
+
+## STEP 6️⃣ Create `runner.py` (Empty Skeleton)
+
+📄 **File:** `runner.py`
+
+Copy-paste:
+
+```python
+def main():
+    """
+    This will replace the TeamCity pipeline.
+    Phase-wise implementation will be added incrementally.
+    """
+    print("Evaluation framework initialized.")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+This is just a placeholder for now.
+
+---
+
+## STEP 7️⃣ Environment Lock File
+
+📄 **File:** `env.lock.json`
+
+Copy-paste:
+
+```json
+{
+  "python": "3.11",
+  "docker": ">=24.0",
+  "git": ">=2.40",
+  "swebench_commit": "TO_BE_FILLED",
+  "gemini_cli_version": "TO_BE_FILLED"
+}
+```
+
+We will fill this later.
+
+---
+
+## STEP 8️⃣ Verify Phase 1 Works
+
+Open VS Code terminal (inside `eval_framework`):
+
+```bash
+python dataset/prepare_dataset.py
+```
+
+Expected:
+
+* Dataset downloads OR
+* Skips if already present
+* No errors
+
+---
+
+# ✅ What You Have Achieved So Far
+
+At this point:
+
+✔ Project structure is **final and locked**
+✔ SWE-Bench dataset preparation is **TeamCity-equivalent**
+✔ Task schema is frozen
+✔ Phase-wise plan is preserved
+
+You have **not implemented anything prematurely** — this is correct.
+
+---
+
+# 🧠 Mental Model (Very Important)
+
+Think like this:
+
+* **Folders** = TeamCity build stages
+* **Files** = TeamCity scripts
+* **runner.py** = TeamCity pipeline DAG
+
+This mindset will keep you aligned.
+
+---
+
+## 🔒 Next Checkpoint
+
+Before moving to Docker & repo checkout, confirm:
+
+> “My VS Code project structure matches exactly, and I have copied the two SWE-Bench scripts verbatim.”
+
+Reply with **READY FOR PHASE 3**.
+
+Then we’ll:
+👉 Build **Docker-based repo checkout & isolation**, step by step, copy-paste style.
+
+
+
+
